@@ -2,14 +2,9 @@ import multiprocessing as mp
 import itertools, logging
 from hanalytics.utils.queue import SentinelInQueue, SentinelOutQueue
 
-class LoaderCommand(object):
-    def __init__(self, loader):
-        self._loader = loader
-
-    def __call__(self, message):
-        return self._loader.do_load(message)
 
 class Loader(object):
+
     log = logging.getLogger()
 
     def __init__(self, num_workers):

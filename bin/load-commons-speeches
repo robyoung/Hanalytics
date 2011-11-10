@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+"""
+> load-parlparse --root-dir=./data/parlparse/commons --workers=4
+"""
+import argparse, logging, sys, os
+import multiprocessing as mp
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+parser = argparse.ArgumentParser(description="Load hansard data from various sources.")
+parser.add_argument('-r', '--root-dir', dest="root_dir",
+                    help = "The location of the parparse commons hansard xml documents.")
+parser.add_argument('-w', '--workers', dest="num_workers", type=int, default=mp.cpu_count() + 1,
+                    help = "The number of workers to use, defaults to the number of processors plus one.")
+parser.add_argument('-s', '--source', dest="source", choices=["parlparse"], default="parlparse",
+                    help = "Where the speeches should be loaded from.")
+parser.add_argument('-t', '--target', dest="target", choices=["mongo", "es"],
+                    help = "Where the speeches should be written to.")
+parser.add_argument('-l', '--log-level', dest="loglevel", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO",
+                    help = "Set the debug level, DEBUG is the most verbose, ERROR the least.")
+args = parser.parse_args()
+
+logger = logging.getLogger()
+logger.setLevel(getattr(logging, args.loglevel))
+logger.addHandler(logging.StreamHandler())
+
+writers = __import__("hanalytics.writers.%s" % args.target, globals(), locals(), ["SpeechWriter"])
+writer = writers.SpeechWriter(index="hanalytics", type="speech")
+
+loaders = __import__("hanalytics.loaders.%s" % args.source, globals(), locals(), ["CommonsSpeechLoader"])
+loader = loaders.CommonsSpeechLoader(root_dir=args.root_dir, num_workers=args.num_workers, writer=writer)
+
+writer.pre_load()
+loader.start()
+writer.post_load()

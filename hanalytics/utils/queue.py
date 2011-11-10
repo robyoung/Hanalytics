@@ -1,8 +1,13 @@
+import abc
 import multiprocessing as mp
 from Queue import Empty
 import unittest
 
+__all__ = ["SentinelInQueue", "SentinelOutQueue"]
+
 class SentinelQueue(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, maxsize=0, processes=None):
         self._queue = mp.Queue(maxsize)
         self._num_processes = mp.cpu_count() if processes is None else processes
@@ -10,15 +15,20 @@ class SentinelQueue(object):
     def __getattr__(self, item):
         return getattr(self._queue, item)
 
+    @abc.abstractmethod
     def send_sentinel(self):
-        raise NotImplementedError()
+        """Send as many sentinels are required to shutdown the queueu."""
+        return
 
+    @abc.abstractmethod
     def __iter__(self):
-        raise NotImplementedError()
+        """Iterate over the queue until it is closed."""
+        return
 
 class SentinelInQueue(SentinelQueue):
+    """A sentinel controlled queue designed for getting messages into a pool of workers."""
     def send_sentinel(self):
-        map(self._queue.put, [StopIteration() for _ in range(self._num_processes)])
+        map(self._queue.put, (StopIteration() for _ in range(self._num_processes)))
 
     def __iter__(self):
         get = self._queue.get
@@ -32,6 +42,7 @@ class SentinelInQueue(SentinelQueue):
                 pass
 
 class SentinelOutQueue(SentinelQueue):
+    """A sentinel controlled queue designed for getting messages out of a pool of workers."""
     def send_sentinel(self):
         self._queue.put(StopIteration())
 
