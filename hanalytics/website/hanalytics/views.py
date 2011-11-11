@@ -8,7 +8,7 @@ def _get_stamp(timestamp):
     if timestamp < 0:
         return datetime.fromtimestamp(0) + timedelta(microseconds=timestamp*1000)
     else:
-        return datetime.fromtimestamp(timestamp)
+        return datetime.fromtimestamp(timestamp/1000)
 def year_histogram(request):
     es = pyes.ES("localhost:9200")
     query = pyes.MatchAllQuery()
