@@ -3,9 +3,9 @@ import logging, os, re
 
 from scrapy.selector.lxmlsel import XmlXPathSelector
 
-from hanalytics.loaders import Loader
+from hanalytics.utils.worker import Worker
 
-class CommonsSpeechLoader(Loader):
+class CommonsSpeechLoader(Worker):
     log = logging.getLogger("hansard.loaders.parlparse")
 
     RE_DATE = re.compile("\d{4}-\d{2}-\d{2}")
@@ -24,7 +24,7 @@ class CommonsSpeechLoader(Loader):
         loaded.add("tracker")
         return (os.path.join(self._root_dir, filename) for filename in os.listdir(self._root_dir) if filename not in loaded)
 
-    def do_load(self, path):
+    def do_work(self, path):
         with open(path, "r") as file:
             hxs = XmlXPathSelector(text=unicode(file.read(), errors="ignore"))
             count = 0

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
-> load-parlparse --root-dir=./data/parlparse/commons --workers=4
+> load-commons-speeches --root-dir=./data/parlparse/commons --workers=4
 """
 import argparse, logging, sys, os
 import multiprocessing as mp
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-parser = argparse.ArgumentParser(description="Load hansard data from various sources.")
+parser = argparse.ArgumentParser(description="Load commons speeches.")
 parser.add_argument('-r', '--root-dir', dest="root_dir",
                     help = "The location of the parparse commons hansard xml documents.")
 parser.add_argument('-w', '--workers', dest="num_workers", type=int, default=mp.cpu_count() + 1,

@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+import argparse, logging, sys, os
+import multiprocessing as mp
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+sys.path.insert(0, PROJECT_ROOT)
+
+parser = argparse.ArgumentParser(description="Download raw data.")
+parser.add_argument('-r', '--root', dest="root_dir", default=os.path.join(PROJECT_ROOT, 'data'),
+                    help = "The location of the root data dir.")
+parser.add_argument('-w', '--workers', dest="num_workers", type=int, default=mp.cpu_count() + 1,
+                    help = "The number of workers to use, defaults to the number of processors plus one.")
+parser.add_argument('-s', '--source', dest="source", choices=["parlparse", "hansardarchive"], default="parlparse",
+                    help = "Which source to fetch from.")
+parser.add_argument('-f', '--fetcher', dest="fetcher", choices=["CommonsSpeechFetcher"], default="CommonsSpeecFetcher",
+                    help = "Which fetcher class to use.")
+parser.add_argument('-l', '--log-level', dest="loglevel", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO",
+                    help = "Set the debug level, DEBUG is the most verbose, ERROR the least.")
+args = parser.parse_args()
+
+logger = logging.getLogger()
+logger.setLevel(getattr(logging, args.loglevel))
+logger.addHandler(logging.StreamHandler())
+
+fetchers = __import__("hanalytics.fetchers.%s" % args.source, globals(), locals(), [args.fetcher])
+fetcher = fetchers.CommonsSpeechFetcher(args.root_dir, args.num_workers)
+
+fetcher.start()
