@@ -10,13 +10,13 @@ class Writer(BaseWriter):
         return self._client
 
     def save(self, document):
-        self._client.insert(document)
+        self.client.save(document)
 
 class SpeechWriter(Writer):
     def pre_load(self):
         # speed up the load by dropping the indexes and reapplying them after
-        self.client.dropIndex("timestamp", pymongo.ASCENDING)
-        self.client.dropIndex([("house", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)])
+        self.client.drop_index("timestamp")
+        self.client.drop_index("house_timestamp")
         del self._client
 
     def save(self, document):
@@ -25,6 +25,6 @@ class SpeechWriter(Writer):
         super(SpeechWriter, self).save(document)
 
     def post_load(self):
-        self.client.ensureIndex("timestamp", pymongo.ASCENDING)
-        self.client.ensureIndex([("house", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)])
+        self.client.ensure_index("timestamp", pymongo.ASCENDING, name="timestamp")
+        self.client.ensure_index([("house", pymongo.ASCENDING), ("timestamp", pymongo.ASCENDING)], name="house_timestamp")
 
