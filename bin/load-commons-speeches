@@ -24,12 +24,27 @@ logger = logging.getLogger()
 logger.setLevel(getattr(logging, args.loglevel))
 logger.addHandler(logging.StreamHandler())
 
+root_dir = os.path.abspath(args.root_dir)
+if not os.path.exists(root_dir):
+    raise ValueError("Root data directory does not exist.")
+
 writers = __import__("hanalytics.writers.%s" % args.target, globals(), locals(), ["SpeechWriter"])
 writer = writers.SpeechWriter(index="hanalytics", type="speech")
 
 loaders = __import__("hanalytics.loaders.%s" % args.source, globals(), locals(), ["CommonsSpeechLoader"])
-loader = loaders.CommonsSpeechLoader(root_dir=args.root_dir, num_workers=args.num_workers, writer=writer)
 
-writer.pre_load()
-loader.start()
-writer.post_load()
+load_type = 1
+if load_type == 1:
+    loaders.load_commons_speeches(root_dir, writer, args.num_workers)
+elif load_type == 2:
+    loader = loaders.CommonsSpeechLoader(root_dir=root_dir, num_workers=args.num_workers, writer=writer)
+
+    writer.pre_load()
+    loader.start()
+    writer.post_load()
+elif load_type == 3:
+    fetcher = loaders.CommonsSpeechLoader(root_dir=root_dir, writer=writer)
+
+    writer.pre_load()
+    workers.Pool(args.num_workers).run(fetcher)
+    writer.post_load()

@@ -14,14 +14,21 @@
             chart = new Highcharts.Chart({
                 chart: {
                     renderTo: "container",
-                    defaultSeriesType: "column"
+                    defaultSeriesType: "line",
+                    zoomType: "x"
                 },
                 xAxis: {
                     type: 'datetime'
                 },
+                plotOptions: {
+                    line: {
+                        marker: { enabled: false }
+                    }
+                },
                 series: [
                     {% for term, series in histogram.iteritems %}
                         {
+                            type: "line",
                             name: "{{ term }}",
                             data: [
                                 {% for stamp, count in series.iteritems %}[Date.UTC({{ stamp.year }}, {{ stamp.month }}, {{ stamp.day }}), {{ count }}],{% endfor %}
@@ -30,7 +37,7 @@
                     {% endfor %}
                 ]
             });
-        })
+        });
     </script>
 <table>
     {% for stamp, count in histogram %}

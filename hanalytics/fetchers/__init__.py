@@ -1,14 +1,22 @@
 """
 Classes responsible for retrieving raw data from the internet.
 """
+from exceptions import NameError
 import os
+import urllib2
+from hanalytics.fetchers.parlparse import log
 
 from hanalytics.utils.worker import Worker
 
-class Fetcher(Worker):
-    def __init__(self, root_dir, subdir, num_workers):
-        super(Fetcher, self).__init__(num_workers)
-        self._root_dir = root_dir
-        self._out_dir = os.path.join(root_dir, *subdir)
-        if not os.path.exists(self._out_dir):
-            os.makedirs(self._out_dir)
+
+def fetch_url(url, error):
+    try:
+        handle = urllib2.urlopen(url)
+        return handle.read()
+    except urllib2.URLError:
+        log.exception(error)
+    finally:
+        try:
+            handle.close()
+        except NameError:
+            pass

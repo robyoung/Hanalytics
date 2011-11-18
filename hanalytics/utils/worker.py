@@ -8,6 +8,7 @@ import multiprocessing as mp
 
 from hanalytics.utils.queue import SentinelInQueue, SentinelOutQueue
 
+# TODO: refactor this to make workers more easily testable
 class Worker(object):
     log = logging.getLogger()
 

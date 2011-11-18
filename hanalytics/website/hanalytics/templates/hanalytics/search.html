@@ -1,0 +1,18 @@
+{% load es %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+<p>result: {{ result.keys }}</p>
+<p>result.hits: {{ result.hits.keys }}</p>
+<ul>
+{% for hit in result.hits.hits %}
+    <li>{% show_hit hit %}</li>
+{% endfor %}
+</ul>
+<p>result.hits.hits: {{ result.hits.hits }}</p>
+</body>
+</html>

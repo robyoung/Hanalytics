@@ -1,50 +1,67 @@
 import logging
 import os
 import re
-import urllib2
 import urlparse
+import multiprocessing as mp
 
 # TODO: remove scrapy dependency, use lxml directly
-from scrapy.selector.lxmlsel import XmlXPathSelector
+from scrapy.selector.lxmlsel import HtmlXPathSelector
 
-from hanalytics.fetchers import Fetcher
+from hanalytics.fetchers import fetch_url
 
-class CommonsSpeechFetcher(Fetcher):
-    log = logging.getLogger()
+log = logging.getLogger()
 
-    HREF_RE = re.compile(r'^debates\d{4}')
+def fetch_commons_speeches(root_dir, num_workers):
+    log.debug("starting fetcher")
+    working_dir = commons_speech_working_dir(root_dir)
+    pool = mp.Pool(num_workers, lambda *args: globals().update(dict(args)), {"_working_dir":working_dir}.items())
+    counts = [0, 0]
+    for result in pool.imap(commons_speech_saver, commons_speech_feeder(working_dir)):
+        counts[0 if result else 1] += 1
+        for i, count in enumerate(counts):
+            if count and count % 1000 is 0:
+                print("%s %s downloads" % (count, "bad" if i else "good"))
 
-    def __init__(self, root_dir, num_workers):
-        super(CommonsSpeechFetcher, self).__init__(root_dir, ["parlparse", "commons"], num_workers)
+def commons_speech_working_dir(root_dir):
+    return create_working_dir(root_dir, "parlparse", "commons")
 
-    def feeder(self):
-        list_url = r'http://ukparse.kforge.net/parldata/scrapedxml/debates/'
-        hxs = XmlXPathSelector(text=urllib2.urlopen(list_url).read())
-        hrefs = hxs.select('//table//td//a/@href').extract()
-        return (urlparse.urljoin(list_url,href) for href in hrefs if self.check_href(href))
+def create_working_dir(*parts):
+    working_dir = os.path.join(*parts)
+    if not os.path.exists(working_dir):
+        os.makedirs(working_dir)
+    return working_dir
 
-    def check_href(self, href):
-        return bool(self.HREF_RE.match(href))
+def commons_speech_feeder(working_dir, _fetch_url=None):
+    # TODO: find a faster way of doing this
+    if not _fetch_url:
+        _fetch_url = fetch_url
+    list_url = 'http://ukparse.kforge.net/parldata/scrapedxml/debates/'
+    log.debug("Fetching index")
+    data = _fetch_url(list_url, "Failed to fetch index.")
+    if data:
+        hxs = HtmlXPathSelector(text=unicode(data, errors="ignore"))
+        selector = hxs.select(r'//table//td//a/@href')
+        check_href = create_href_checker(re.compile(r'^debates\d{4}'), working_dir)
+        for href in selector.extract():
+            if check_href(href):
+                yield urlparse.urljoin(list_url, href)
 
-    def do_work(self, url):
-        self.log.debug("Fetching %s" % url)
-        try:
-            in_handle = urllib2.urlopen(url)
-            with open(os.path.join(self._outdir, os.path.basename(url)), "w+") as out_handle:
-                out_handle.write(in_handle.read())
-        except urllib2.URLError as e:
-            self.log.exception("Failed to download commons debate file.")
-        finally:
-            try:
-                in_handle.close()
-            except NameError:
-                pass
-        return True
+def create_href_checker(pattern, working_dir):
+    def check_href(href):
+        if bool(pattern.match(href)):
+            if os.path.basename(urlparse.urlparse(href).path) not in os.listdir(working_dir):
+                return True
+            else:
+                log.info("Skipping %s" % href)
+        return False
+    return check_href
 
-    def read_results(self):
-        counts = [0, 0]
-        for result in self._outqueue:
-            counts[0 if result else 1] += 1
-            for i, count in enumerate(counts):
-                if count and count % 1000 is 0:
-                    self.log.info("%s %s downloads" % (count, "bad" if i else "good"))
+def commons_speech_saver(url, _fetch_url=None, _working_dir=None):
+    working_dir = _working_dir or globals()["_working_dir"]
+    _fetch_url = _fetch_url if _fetch_url else fetch_url
+
+    log.debug("Fetching %s" % url)
+    data = _fetch_url(url, "Failed to download commons debate file.")
+    if data:
+        with open(os.path.join(working_dir, os.path.basename(url)), "w+") as handle:
+            handle.write(data)
