@@ -42,6 +42,7 @@ def histogram(request, interval="year"):
         frame = moments.ewma(frame, roll)[roll:]
 
     context = {
-        "histogram": frame
+        "histogram": frame,
+        "terms": ", ".join(terms)
     }
     return render_to_response("hanalytics/%s-histogram.html" % interval, context)

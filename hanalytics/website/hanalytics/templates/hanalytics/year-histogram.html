@@ -16,8 +16,19 @@
                     renderTo: "container",
                     defaultSeriesType: "column"
                 },
+                title: {
+                    text:"{{ terms|title }}"
+                },
                 xAxis: {
+                    title: {
+                        text: "Date"
+                    },
                     type: 'datetime'
+                },
+                yAxis: {
+                    title: {
+                        text: "Mentions"
+                    }
                 },
                 series: [
                     {% for term, series in histogram.iteritems %}

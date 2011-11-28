@@ -17,8 +17,19 @@
                     defaultSeriesType: "line",
                     zoomType: "x"
                 },
+                title: {
+                    text:"{{ terms|title }}"
+                },
                 xAxis: {
+                    title: {
+                        text: "Date"
+                    },
                     type: 'datetime'
+                },
+                yAxis: {
+                    title: {
+                        text: "Mentions"
+                    }
                 },
                 plotOptions: {
                     line: {
