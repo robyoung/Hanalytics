@@ -5,7 +5,7 @@ import multiprocessing as mp
 
 from lxml import etree
 
-from hanalytics.fetchers import fetch_url
+from hanalytics.fetchers import fetch_url, create_working_dir
 
 log = logging.getLogger()
 
@@ -21,16 +21,11 @@ def fetch_commons_speeches(root_dir, num_workers):
                 log.debug("%s %s downloads" % (count, "bad" if i else "good"))
 
 def commons_speech_working_dir(root_dir):
+    """Create and return the working directory"""
     return create_working_dir(root_dir, "hansardarchive")
 
-def create_working_dir(*parts):
-    # TODO: pull up
-    working_dir = os.path.join(*parts)
-    if not os.path.exists(working_dir):
-        os.makedirs(working_dir)
-    return working_dir
-
 def commons_speech_feeder(working_dir, _fetch_url=None):
+    """Return a generator that yields file  urls"""
     all_series = [
         (1, 1803, 1820),
         (2, 1820, 1830),
