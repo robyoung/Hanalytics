@@ -42,7 +42,9 @@ def commons_speech_feeder(working_dir, _fetch_url=None):
         hxs = HtmlXPathSelector(text=unicode(data, errors="ignore"))
         selector = hxs.select(r'//table//td//a/@href')
         check_href = create_href_checker(re.compile(r'^debates\d{4}'), working_dir)
-        for href in selector.extract():
+        urls = selector.extract()
+        log.debug("Fetched %s urls from index" % len(urls))
+        for href in urls:
             if check_href(href):
                 yield urlparse.urljoin(list_url, href)
 

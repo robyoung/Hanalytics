@@ -1,1 +1,42 @@
-VIEWER
+<html>
+<head>
+<style>
+ol {
+    margin: 0;
+}
+li {
+    list-style: none;
+}
+.speech {
+    border: 1px solid #06a;
+    margin: 0;
+    padding: 10px;
+}
+.speech .text {
+    border:  1px solid #027;
+}
+.speech .info {
+    float: left;
+    border:  1px solid #a55;
+    margin:  10px;
+}
+</style>
+</head>
+<body>
+<h1>Viewer</h1>
+<ol>
+    {% for speech in speeches %}
+        <li class="speech">
+            <div class="info">
+                <div class="speaker">{{ speech.speakername }}</div>
+                <div class="date">{{ speech.date|date }}</div>
+            </div>
+            <div class="text">{% for text in speech.text %}
+                {{ text|safe }}
+            {% endfor %}
+            </div>
+        </li>
+    {% endfor %}
+</ol>
+</body>
+</html>

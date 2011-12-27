@@ -1,12 +1,11 @@
 """
 Classes responsible for retrieving raw data from the internet.
 """
+import logging
 from exceptions import NameError
-import os
 import urllib2
-from hanalytics.fetchers.parlparse import log
 
-from hanalytics.utils.worker import Worker
+log = logging.getLogger()
 
 
 def fetch_url(url, error):
