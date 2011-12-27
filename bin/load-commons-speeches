@@ -5,14 +5,16 @@
 import argparse, logging, sys, os
 import multiprocessing as mp
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+sys.path.insert(0, PROJECT_ROOT)
 
 parser = argparse.ArgumentParser(description="Load commons speeches.")
-parser.add_argument('-r', '--root-dir', dest="root_dir",
+parser.add_argument('-r', '--root-dir', dest="root_dir", default=os.path.join(PROJECT_ROOT, 'data'),
                     help = "The location of the parparse commons hansard xml documents.")
 parser.add_argument('-w', '--workers', dest="num_workers", type=int, default=mp.cpu_count() + 1,
                     help = "The number of workers to use, defaults to the number of processors plus one.")
-parser.add_argument('-s', '--source', dest="source", choices=["parlparse"], default="parlparse",
+parser.add_argument('-s', '--source', dest="source", choices=["parlparse", "hansardarchive"], default="parlparse",
                     help = "Where the speeches should be loaded from.")
 parser.add_argument('-t', '--target', dest="target", choices=["mongo", "es"],
                     help = "Where the speeches should be written to.")

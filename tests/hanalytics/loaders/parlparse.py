@@ -34,4 +34,4 @@ class CommonsSpeechLoaderTest(unittest.TestCase, TestHelpMixin):
         filename, count = commons_speech_saver(path, writer)
         self.assertEqual("debates2011-11-02a.xml", filename)
         self.assertEqual(519, count)
-        self.assertEqual(519, writer.save)
+        self.assertEqual(519, writer.save.call_count)

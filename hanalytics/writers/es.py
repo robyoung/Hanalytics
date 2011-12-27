@@ -33,7 +33,8 @@ class SpeechWriter(Writer):
         del self._client
 
     def save(self, document):
-        document['date'] = document['date'].strftime("%Y-%m-%d")
+        d = document['date']
+        document['date'] = "%s-%02i-%02i" % (d.year, d.month, d.day)
         # todo: think about html stripping
         document['text'] = "".join(document['text'])
         m = hashlib.md5()

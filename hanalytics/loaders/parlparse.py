@@ -3,11 +3,11 @@ import logging, os, re
 import multiprocessing as mp
 
 from scrapy.selector.lxmlsel import XmlXPathSelector
+
 from hanalytics.fetchers.parlparse import commons_speech_working_dir
 
 log = logging.getLogger()
 
-# TODO: rename function to be imperative
 def load_commons_speeches(root_dir, writer, num_workers):
     log.debug("starting loader")
     working_dir = commons_speech_working_dir(root_dir)
