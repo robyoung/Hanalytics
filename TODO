@@ -1,1 +1,2 @@
 # TODO: improve initial extraction to include debate metadata
+# TODO: create Redis backed punkt trainer

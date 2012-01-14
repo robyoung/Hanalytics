@@ -3,6 +3,7 @@ import logging
 import os
 import multiprocessing as mp
 import datetime
+import random
 import zipfile
 
 from scrapy.selector.lxmlsel import XmlXPathSelector
@@ -12,12 +13,12 @@ from hanalytics.loaders.parlparse import hxs_extract
 
 log = logging.getLogger()
 
-def load_commons_speeches(root_dir, writer, num_workers):
+def load_commons_speeches(root_dir, writer, num_workers, rate):
     log.debug("starting loader")
     working_dir = commons_speech_working_dir(root_dir)
     log.debug(working_dir)
     tracker = os.path.join(working_dir, "tracker")
-    pool = mp.Pool(num_workers, lambda *args: globals().update(dict(args)), {"_writer":writer}.items())
+    pool = mp.Pool(num_workers, lambda *args: globals().update(dict(args)), {"_writer":writer, "rate":rate}.items())
     # TODO: move reporting out
     day_mod = 100
     day_count = 0
@@ -60,7 +61,11 @@ def fix_bad_zipfile(path):
             raise zipfile.BadZipfile()
 
 def commons_speech_saver(path, _writer=None):
+    """
+    Parse a hansard archive file and save it to the backing store
+    """
     writer = _writer or globals()['_writer']
+    rate = globals()['rate']
 
     try:
         count = 0
@@ -71,23 +76,24 @@ def commons_speech_saver(path, _writer=None):
                     text = unicode(inner_file.read(), errors="ignore")
                     hxs = XmlXPathSelector(text=text)
                     for housecommons in hxs.select(r'//housecommons'):
-                        date_str = housecommons.select(r'.//date/@format').extract()[0]
-                        speech_date = datetime.datetime.strptime(date_str.strip(), "%Y-%m-%d")
+                        if random.random() < rate:
+                            date_str = housecommons.select(r'.//date/@format').extract()[0]
+                            speech_date = datetime.datetime.strptime(date_str.strip(), "%Y-%m-%d")
 
-                        for speech in housecommons.select(r'.//p'):
-                            writer.save({
-                                "id": "hansardarchives/%s" % hxs_extract(speech, r'./@id'),
-                                "house": "commons",
-                                "source": "hansardarchives",
-                                "speakerid": None,
-                                "speakername": hxs_extract(speech, r'./member/text()'),
-                                "column": None,
-                                "date": speech_date,
-                                "time": None,
-                                "url": None,
-                                "text": [hxs_extract(speech, r'./membercontribution/text()')]
-                            })
-                            count += 1
+                            for speech in housecommons.select(r'.//p'):
+                                writer.save({
+                                    "id": "hansardarchives/%s" % hxs_extract(speech, r'./@id'),
+                                    "house": "commons",
+                                    "source": "hansardarchives",
+                                    "speakerid": None,
+                                    "speakername": hxs_extract(speech, r'./member/text()'),
+                                    "column": None,
+                                    "date": speech_date,
+                                    "time": None,
+                                    "url": None,
+                                    "text": [hxs_extract(speech, r'./membercontribution/text()')]
+                                })
+                                count += 1
         except zipfile.BadZipfile:
             log.debug("Bad zip file %s" % os.path.basename(path))
         return os.path.basename(path), count

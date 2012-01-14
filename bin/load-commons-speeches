@@ -16,10 +16,12 @@ parser.add_argument('-w', '--workers', dest="num_workers", type=int, default=mp.
                     help = "The number of workers to use, defaults to the number of processors plus one.")
 parser.add_argument('-s', '--source', dest="source", choices=["parlparse", "hansardarchive"], default="parlparse",
                     help = "Where the speeches should be loaded from.")
-parser.add_argument('-t', '--target', dest="target", choices=["mongo", "es"],
+parser.add_argument('-t', '--target', dest="target", choices=["mongo", "es", "mongo_es"],
                     help = "Where the speeches should be written to.")
 parser.add_argument('-l', '--log-level', dest="loglevel", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO",
                     help = "Set the debug level, DEBUG is the most verbose, ERROR the least.")
+parser.add_argument('-a', '--rate', dest="rate", type=float, default=1.0,
+                    help = "The sample rate for how many speeches are loaded.")
 args = parser.parse_args()
 
 logger = logging.getLogger()
@@ -33,20 +35,5 @@ if not os.path.exists(root_dir):
 writers = __import__("hanalytics.writers.%s" % args.target, globals(), locals(), ["SpeechWriter"])
 writer = writers.SpeechWriter(index="hanalytics", type="speech")
 
-loaders = __import__("hanalytics.loaders.%s" % args.source, globals(), locals(), ["CommonsSpeechLoader"])
-
-load_type = 1
-if load_type == 1:
-    loaders.load_commons_speeches(root_dir, writer, args.num_workers)
-elif load_type == 2:
-    loader = loaders.CommonsSpeechLoader(root_dir=root_dir, num_workers=args.num_workers, writer=writer)
-
-    writer.pre_load()
-    loader.start()
-    writer.post_load()
-elif load_type == 3:
-    fetcher = loaders.CommonsSpeechLoader(root_dir=root_dir, writer=writer)
-
-    writer.pre_load()
-    workers.Pool(args.num_workers).run(fetcher)
-    writer.post_load()
+loaders = __import__("hanalytics.loaders.%s" % args.source, globals(), locals(), ["load_commons_speeches"])
+loaders.load_commons_speeches(root_dir, writer, args.num_workers, args.rate)

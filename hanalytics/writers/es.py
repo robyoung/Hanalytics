@@ -1,3 +1,4 @@
+import copy
 import pyes
 import hashlib
 
@@ -33,6 +34,7 @@ class SpeechWriter(Writer):
         del self._client
 
     def save(self, document):
+        document = copy.deepcopy(document)
         d = document['date']
         document['date'] = "%s-%02i-%02i" % (d.year, d.month, d.day)
         # todo: think about html stripping

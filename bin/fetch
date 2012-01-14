@@ -24,15 +24,6 @@ logger.setLevel(getattr(logging, args.loglevel))
 logging.Formatter("%(asctime)s %(process)d %(levelname)s [%(name)s] %(message)s")
 logger.addHandler(logging.StreamHandler())
 
-fetchers = __import__("hanalytics.fetchers.%s" % args.source, globals(), locals(), [args.fetcher])
-
-load_type = 1
-if load_type == 1:
-    fetchers.fetch_commons_speeches(args.root_dir, args.num_workers)
-elif load_type == 2:
-    fetcher = fetchers.CommonsSpeechFetcher(args.root_dir, args.num_workers)
-    fetcher.start()
-elif load_type == 3:
-    fetcher = fetchers.CommonsSpeechFetcher(args.root_dir)
-    pool = workers.Pool(args.num_workers)
-    pool.run(fetcher)
+module = "hanalytics.fetchers.%s" % args.source
+fetcher = __import__(module, globals(), locals(), ["fetch_commons_speeches"])
+fetcher.fetch_commons_speeches(args.root_dir, args.num_workers)
